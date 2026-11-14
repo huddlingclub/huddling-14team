@@ -8,170 +8,59 @@
 @import "@astryxdesign/core/tailwind-theme.css";
 @import "tailwindcss/utilities.css" layer(utilities);
 
+/* 화면 틀 바깥(PC에서 375px 틀 양옆)도 어둡게 */
+html,
 body {
   margin: 0;
-  background: #f5f6f8;
-  color: #171b25;
-  font-family: Inter, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  background: #08061a;
+  color: #fff;
 }
 
-.account-shell {
-  width: min(100%, 32rem);
-  min-height: 100dvh;
-  margin-inline: auto;
-  padding: 2rem 1.5rem max(2rem, env(safe-area-inset-bottom));
-  background: var(--color-background-surface, #fff);
-}
-
-.account-header {
-  display: grid;
-  gap: 0.5rem;
-  margin-bottom: 1.75rem;
-}
-
-.account-header h1 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  letter-spacing: -0.05em;
-}
-
-.account-brand {
-  color: #474f62;
-  font-weight: 600;
-}
-
-.account-form, .profile-fields {
-  display: grid;
-  gap: 1.25rem;
-}
-
-.account-shell :focus-visible {
-  outline: 2px solid #3157a4;
-  outline-offset: 3px;
-}
-
-.account-hint {
-  color: #555d70;
-  font-size: 0.875rem;
-  font-weight: 400;
-}
-
-.account-link {
-  display: inline-block;
-  padding: 0.625rem 0;
-  color: #244589;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-}
-
-.tag-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding-top: 0.5rem;
-}
-
-.tag-option {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  min-height: 2.75rem;
-  padding: 0.375rem 0.75rem;
-  border: 1px solid #cdd2dd;
-  border-radius: 100vw;
-  cursor: pointer;
-}
-
-.tag-option:has(input:checked) {
-  border-color: #4569b3;
-  background: #eaf1ff;
-  color: #173c82;
-}
-
-.tag-option input {
-  accent-color: #3157a4;
-}
-
-.custom-input {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.custom-input > :first-child {
-  flex: 1;
-  min-width: 0;
-}
-
-.feedback {
-  padding: 0.75rem;
-  border-radius: 0.625rem;
-  background: #fef1ef;
-  color: #a42819;
-  font-size: 0.875rem;
-}
-
-.account-actions {
-  display: grid;
-  gap: 0.75rem;
-}
-
-/* 네트워킹 화면(홈·추천·그룹·프로필·QR·데모 계정 화면)은 디자인 적용 전까지 밝은 배경으로 고정한다.
-   다크 모드에서 테마의 밝은 글자색이 흰 배경 위에 올라가 안 보이는 것을 막는다.
-   계정 담당 화면(account-shell)이 들어 있을 때는 그 화면의 테마를 그대로 둔다. */
-.light-screen,
-.tabs-shell:not(:has(.account-shell)) {
-  color-scheme: light;
-  /* Figma "04 공통 UI" 토큰 — 시안이 밝은 테마만 정의하므로 다크 모드에서도 같은 값으로 고정한다 */
-  --color-background-body: #f1f1f1;
-  --color-background-surface: #fff;
-  --color-background-card: #fff;
-  --color-background-popover: #fff;
-  --color-border: rgba(0, 0, 0, 0.08);
-  --color-border-emphasized: #d4d4d4;
-  --color-text-primary: #000;
-  --color-text-secondary: #474747;
-  --color-text-disabled: #919191;
-  --color-text-success: #2f7d33;
-  --color-icon-secondary: #6a6a6a;
-  --color-icon-success: #00490b;
-  --color-status-error: #e3193b;
-  --color-accent: #1b1b1b;
-  --color-accent-muted: #d4d4d4;
-  --color-neutral: rgba(0, 0, 0, 0.06);
-  --color-primary-start: #005eff;
-  --color-primary-end: #008466;
-  --color-on-primary: #fff;
-  --color-highlight-muted: rgba(14, 156, 136, 0.12);
-  --color-on-highlight-muted: #075e52;
-  --color-shadow: rgba(0, 0, 0, 0.1);
+/* Figma "07 디자인 · 전체 화면 (Dark · Purple)" 토큰 — 앱 전체 공통.
+   테마 리셋(Astryx)이 제목·문단에 직접 거는 글자색·글꼴 변수도 여기서 같은 값으로 덮는다. */
+.app-frame {
+  color-scheme: dark;
+  --color-background-body: #0f0b29;
+  --color-background-surface: #0f0b29;
+  --color-background-card: #1a1540;
+  --color-background-raised: #2a2552;
+  --color-background-popover: #2a2552;
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-border-emphasized: #38326a;
+  --color-text-primary: #fff;
+  --color-text-secondary: #a9a4c9;
+  --color-text-disabled: #6c6791;
+  --color-accent: #c9b8ff;
+  --color-on-accent: #140f33;
+  --color-accent-muted: rgba(201, 184, 255, 0.2);
+  --color-neutral: rgba(255, 255, 255, 0.08);
+  --color-highlight-muted: #15392b;
+  --color-on-highlight-muted: #a7e6bd;
+  --color-status-error: #ff8fa0;
+  --color-status-success: #a7e6bd;
+  --color-shadow: rgba(0, 0, 0, 0.4);
   --brand-blue: #3b82ff;
   --brand-navy: #1b2b4a;
   --brand-mint: #2ee6c8;
   --radius-container: 12px;
   --radius-element: 10px;
-  background: var(--color-background-body);
-  color: var(--color-text-primary);
-  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo",
+  --font-family-body: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo",
     "Noto Sans KR", "Malgun Gothic", sans-serif;
-}
+  --font-family-heading: var(--font-family-body);
 
-/* 흰 바탕이 필요한 화면(데모 계정 화면) */
-.app-frame.is-surface {
-  background: var(--color-background-surface);
-}
-
-/* 화면 틀 — 휴대폰에서는 화면 폭을 채우고, 그보다 넓으면 시안의 375px 틀을 가운데에 둔다.
-   375는 홀수라 그냥 가운데 정렬하면 0.5px에 걸리므로 왼쪽 여백을 정수 px로 내린다. */
-.app-frame {
   display: flex;
   flex-direction: column;
   width: 100%;
   min-height: 100dvh;
   margin-inline: auto;
+  background: var(--color-background-body);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+  -webkit-tap-highlight-color: transparent;
 }
 
+/* PC·태블릿에서는 시안의 375px 틀을 가운데에 둔다.
+   375는 홀수라 그냥 가운데 정렬하면 0.5px에 걸리므로 왼쪽 여백을 정수 px로 내린다. */
 @media (min-width: 481px) {
   .app-frame {
     max-width: 375px;
@@ -185,17 +74,34 @@ body {
   }
 }
 
-/* 알림(토스트) 위치 — 하단 탭(60) 위 16px. 하단 CTA가 있는 하위 화면에서는 CTA(100) 위 16px */
+/* 키보드로 이동할 때 보이는 초점 테두리 (2px · 정수) */
+.app-frame :focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* 알림(토스트) 위치 — 하단 탭(57) 위 16px. 하단 버튼이 있는 하위 화면에서는 버튼 영역 위 16px */
 .toast-region {
-  bottom: calc(76px + env(safe-area-inset-bottom));
+  bottom: calc(77px + env(safe-area-inset-bottom));
 }
 
 .tabs-shell:has(.bottom-cta) .toast-region {
-  bottom: calc(116px + env(safe-area-inset-bottom));
+  bottom: calc(100px + env(safe-area-inset-bottom));
 }
 
-/* 글자 스타일 (Astryx/Heading 2 · Heading 3 · Label · Body · Supporting). 유틸리티 클래스로 덮을 수 있게 components 레이어에 둔다 */
+.tabs-shell:not(:has(.tab-bar)):not(:has(.bottom-cta)) .toast-region {
+  bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+/* 글자 스타일 (07 · Astryx 텍스트 스타일 · Pretendard · 자간 -1%). 유틸리티 클래스로 덮을 수 있게 components 레이어에 둔다 */
 @layer components {
+  .t-title {
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 32px;
+    letter-spacing: -0.24px;
+  }
+
   .t-h2 {
     font-size: 20px;
     font-weight: 600;
@@ -244,10 +150,4 @@ body {
     line-height: 16px;
     letter-spacing: -0.12px;
   }
-}
-
-/* 하단 탭 영역: 마이페이지(account-shell)도 탭 바 위 높이에 맞춘다 */
-.tabs-body .account-shell {
-  flex: 1;
-  min-height: 0;
 }

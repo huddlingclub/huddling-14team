@@ -1,15 +1,16 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { DEMO } from '@/lib/demo';
-import { getProfile } from '@/lib/profiles';
+import { getMe } from '@/lib/me';
 import { getSession } from '@/lib/session';
-import { DemoQr, QrScreen } from '@/screens/QrScreen';
+import { QrScreen } from '@/screens/QrScreen';
+
+export const metadata: Metadata = { title: '내 QR' };
 
 // PG-602 내 QR
 export default async function MyQr() {
-  if (DEMO) return <DemoQr />;
   const session = await getSession();
   if (!session) redirect('/login');
-  const profile = await getProfile(session.userId);
-  if (!profile) redirect('/login');
-  return <QrScreen me={{ id: profile.userId, displayName: profile.displayName }} />;
+  const me = await getMe(session.userId);
+  if (!me) redirect('/login');
+  return <QrScreen me={{ id: me.id, displayName: me.profile.displayName, photo: me.photo }} />;
 }
