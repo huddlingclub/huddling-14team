@@ -24,6 +24,8 @@ const schema = z.object({
 
 export function POST(request: Request) {
   return handle(async () => {
+    // 등록 화면에서 '명함으로 등록'을 꺼 둔 동안에는 주소로 직접 불러도 동작하지 않는다 (요금이 드는 기능)
+    if (process.env.OCR_ENABLED !== '1') throw new HttpError(404, '지금은 명함 읽기를 쓸 수 없어요. 직접 입력해 주세요.');
     const input = await readJson(request);
     const match = typeof input?.image === 'string' ? DATA_URL.exec(input.image) : null;
     if (!match) throw new HttpError(400, '명함 사진을 확인해 주세요.');

@@ -16,7 +16,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     if (!rows[0]) return new Response(null, { status: 404 });
     // 주소에 ?v=(바뀐 시각)이 붙어 있어 사진을 바꾸면 주소도 바뀐다 → 길게 캐시해도 된다(본인 기기에만)
     return new Response(new Uint8Array(rows[0].data), {
-      headers: { 'Content-Type': rows[0].mime, 'Cache-Control': 'private, max-age=86400, immutable' },
+      headers: {
+        'Content-Type': rows[0].mime,
+        'Cache-Control': 'private, max-age=86400, immutable',
+        'X-Content-Type-Options': 'nosniff', // 사진으로만 다루고, 내용을 보고 다른 형식으로 추측하지 않게
+      },
     });
   } catch {
     return new Response(null, { status: 503 });

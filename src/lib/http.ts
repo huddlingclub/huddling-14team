@@ -2,6 +2,7 @@ import 'server-only';
 // 네트워킹 API 공통 — 오류 응답 형식은 account-http.ts의 fail()과 같은 { message }
 import { unstable_rethrow } from 'next/navigation';
 import { NextResponse } from 'next/server';
+import { allowAttempt } from '@/lib/account-http';
 import { getParticipant } from '@/lib/domain';
 import { loadNetwork } from '@/lib/network';
 import { getSession } from '@/lib/session';
@@ -39,6 +40,11 @@ export async function requireUser() {
 export function assertSameOrigin(request: Request) {
   const site = request.headers.get('sec-fetch-site');
   if (site && site !== 'same-origin') throw new HttpError(403, '잘못된 요청이에요.');
+}
+
+/** 같은 사람(또는 같은 곳)이 1분 안에 너무 많이 보내는 쓰기 요청을 막는다 */
+export async function assertRate(scope: string, limit: number) {
+  if (!(await allowAttempt(scope, limit))) throw new HttpError(429, '요청이 많아요. 잠시 후 다시 시도해 주세요.');
 }
 
 const UUID = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;

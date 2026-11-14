@@ -1,7 +1,7 @@
 // 친구 관계 — 목록 조회 · 친구 요청 (ERD.md "친구 상태와 쓰기 규칙")
 import { db } from '@/lib/db';
 import { relationLists, relationView } from '@/lib/domain';
-import { HttpError, assertSameOrigin, handle, ok, participantId, requireUser, viewerNetwork } from '@/lib/http';
+import { HttpError, assertRate, assertSameOrigin, handle, ok, participantId, requireUser, viewerNetwork } from '@/lib/http';
 
 export async function GET() {
   return handle(async () => {
@@ -18,6 +18,7 @@ export async function POST(request: Request) {
   return handle(async () => {
     assertSameOrigin(request);
     const uid = await requireUser();
+    await assertRate(`relation:${uid}`, 60); // 한 사람이 모두에게 요청을 쏟아붓지 못하게 (1분 60번)
     const body: unknown = await request.json().catch(() => null);
     const toId = participantId((body as { toId?: unknown } | null)?.toId, '없는 프로필이에요.');
     if (toId === uid) throw new HttpError(400, '나에게는 요청할 수 없어요.');

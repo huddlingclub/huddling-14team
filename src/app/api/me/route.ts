@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fail, readJson } from "@/lib/account-http";
+import { allowAttempt, fail, readJson } from "@/lib/account-http";
 import { transaction } from "@/lib/db";
 import { readProfile } from "@/lib/profile-input";
 import { getProfile, getTagOptions, saveProfile } from "@/lib/profiles";
@@ -23,6 +23,9 @@ export async function PATCH(request: Request) {
     if (!session) return fail("로그인해 주세요.", 401);
     const input = await readJson(request);
     if (!input) return fail("프로필 정보를 확인해 주세요.", 400);
+    if (!(await allowAttempt(`profile:${session.userId}`, 30))) {
+      return fail("요청이 많아요. 잠시 후 다시 시도해 주세요.", 429);
+    }
     const options = await getTagOptions();
     let profile;
     try {
