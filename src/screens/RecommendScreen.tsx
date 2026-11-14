@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Empty, ErrorRetry, Loading } from '@/components/feedback/States';
 import { PersonList } from '@/components/people/PersonList';
-import { Section, TopBar } from '@/components/ui';
+import { Card, Content, TopBar } from '@/components/ui';
 import { useApi } from '@/lib/client';
 import type { RecommendItem } from '@/lib/types';
 
@@ -15,18 +15,27 @@ export function RecommendScreen() {
       {!data ? (
         error ? <ErrorRetry message={error} onRetry={reload} /> : <Loading />
       ) : (
-        <Section title="나와 공통점이 있는 사람">
-          {data.items.length === 0 ? (
-            <div className="space-y-3">
-              <Empty>아직 나와 공통점이 있는 사람이 없어요.</Empty>
-              <Link href="/groups" className="flex h-11 items-center justify-center rounded-lg border border-gray-300 text-sm font-semibold">
-                그룹 둘러보기
-              </Link>
-            </div>
-          ) : (
-            <PersonList people={data.items} />
-          )}
-        </Section>
+        <Content>
+          <div className="flex flex-col gap-[2px]">
+            <h2 className="t-h3">나와 공통점이 있는 사람</h2>
+            <p className="t-support text-[color:var(--color-text-secondary)]">요청을 보내고 수락되면 친구가 돼요.</p>
+          </div>
+          <Card>
+            {data.items.length === 0 ? (
+              <>
+                <Empty>아직 나와 공통점이 있는 사람이 없어요.</Empty>
+                <Link
+                  href="/groups"
+                  className="t-label-strong flex h-10 items-center justify-center rounded-[var(--radius-element)] bg-[var(--color-neutral)]"
+                >
+                  그룹 둘러보기
+                </Link>
+              </>
+            ) : (
+              <PersonList people={data.items} />
+            )}
+          </Card>
+        </Content>
       )}
     </>
   );

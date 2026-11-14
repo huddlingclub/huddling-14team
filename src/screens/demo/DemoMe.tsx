@@ -32,11 +32,11 @@ function Form({ me }: { me: SelfProfile }) {
   }
 
   return (
-    <form onSubmit={save} className="flex flex-1 flex-col">
+    <form onSubmit={save} className="flex flex-1 flex-col bg-[var(--color-background-surface)]">
       <div className="px-4 py-5">
         <DemoProfileForm value={value} onChange={setValue} />
       </div>
-      <div className="sticky bottom-14 mt-auto space-y-2 border-t border-gray-100 bg-white px-4 py-3">
+      <div className="sticky bottom-[60px] mt-auto space-y-2 bg-[var(--color-background-surface)] px-4 py-3 shadow-[inset_0_1px_0_var(--color-border)]">
         {error && (
           <p role="alert" className="text-sm text-red-600">
             {error}

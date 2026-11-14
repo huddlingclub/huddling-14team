@@ -122,12 +122,128 @@ body {
    계정 담당 화면(account-shell)이 들어 있을 때는 그 화면의 테마를 그대로 둔다. */
 .light-screen,
 .tabs-shell:not(:has(.account-shell)) {
-  background: #fff;
-  color: #111827;
   color-scheme: light;
-  /* 테마 리셋이 제목·문단에 쓰는 글자색 변수 — 다크 모드 값(흰색)을 덮는다 */
-  --color-text-primary: #111827;
-  --color-text-secondary: #6b7280;
+  /* Figma "04 공통 UI" 토큰 — 시안이 밝은 테마만 정의하므로 다크 모드에서도 같은 값으로 고정한다 */
+  --color-background-body: #f1f1f1;
+  --color-background-surface: #fff;
+  --color-background-card: #fff;
+  --color-background-popover: #fff;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-emphasized: #d4d4d4;
+  --color-text-primary: #000;
+  --color-text-secondary: #474747;
+  --color-text-disabled: #919191;
+  --color-text-success: #2f7d33;
+  --color-icon-secondary: #6a6a6a;
+  --color-icon-success: #00490b;
+  --color-status-error: #e3193b;
+  --color-accent: #1b1b1b;
+  --color-accent-muted: #d4d4d4;
+  --color-neutral: rgba(0, 0, 0, 0.06);
+  --color-primary-start: #005eff;
+  --color-primary-end: #008466;
+  --color-on-primary: #fff;
+  --color-highlight-muted: rgba(14, 156, 136, 0.12);
+  --color-on-highlight-muted: #075e52;
+  --color-shadow: rgba(0, 0, 0, 0.1);
+  --brand-blue: #3b82ff;
+  --brand-navy: #1b2b4a;
+  --brand-mint: #2ee6c8;
+  --radius-container: 12px;
+  --radius-element: 10px;
+  background: var(--color-background-body);
+  color: var(--color-text-primary);
+  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo",
+    "Noto Sans KR", "Malgun Gothic", sans-serif;
+}
+
+/* 흰 바탕이 필요한 화면(데모 계정 화면) */
+.app-frame.is-surface {
+  background: var(--color-background-surface);
+}
+
+/* 화면 틀 — 휴대폰에서는 화면 폭을 채우고, 그보다 넓으면 시안의 375px 틀을 가운데에 둔다.
+   375는 홀수라 그냥 가운데 정렬하면 0.5px에 걸리므로 왼쪽 여백을 정수 px로 내린다. */
+.app-frame {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100dvh;
+  margin-inline: auto;
+}
+
+@media (min-width: 481px) {
+  .app-frame {
+    max-width: 375px;
+  }
+
+  @supports (margin-left: round(down, 1.5px, 1px)) {
+    .app-frame {
+      margin-right: 0;
+      margin-left: round(down, calc((100% - 375px) / 2), 1px);
+    }
+  }
+}
+
+/* 알림(토스트) 위치 — 하단 탭(60) 위 16px. 하단 CTA가 있는 하위 화면에서는 CTA(100) 위 16px */
+.toast-region {
+  bottom: calc(76px + env(safe-area-inset-bottom));
+}
+
+.tabs-shell:has(.bottom-cta) .toast-region {
+  bottom: calc(116px + env(safe-area-inset-bottom));
+}
+
+/* 글자 스타일 (Astryx/Heading 2 · Heading 3 · Label · Body · Supporting). 유틸리티 클래스로 덮을 수 있게 components 레이어에 둔다 */
+@layer components {
+  .t-h2 {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 28px;
+    letter-spacing: -0.2px;
+  }
+
+  .t-h3 {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 24px;
+    letter-spacing: -0.17px;
+  }
+
+  .t-label-strong {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+    letter-spacing: -0.14px;
+  }
+
+  .t-label {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    letter-spacing: -0.14px;
+  }
+
+  .t-body {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    letter-spacing: -0.14px;
+  }
+
+  .t-support {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 20px;
+    letter-spacing: -0.12px;
+  }
+
+  .t-support-strong {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+    letter-spacing: -0.12px;
+  }
 }
 
 /* 하단 탭 영역: 마이페이지(account-shell)도 탭 바 위 높이에 맞춘다 */

@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import { Empty, ErrorRetry, Loading } from '@/components/feedback/States';
 import { PersonList } from '@/components/people/PersonList';
-import { Section, TopBar } from '@/components/ui';
+import { Content, Section, TopBar } from '@/components/ui';
 import { useApi } from '@/lib/client';
 import type { GroupSummary, PersonRow } from '@/lib/types';
 
@@ -26,9 +26,11 @@ export function GroupDetailScreen() {
       <>
         <TopBar title="그룹" back />
         {status === 404 ? (
-          <Section title="없는 그룹이에요">
-            <Empty>이번 밋업의 그룹이 아니에요.</Empty>
-          </Section>
+          <Content>
+            <Section title="없는 그룹이에요">
+              <Empty>이번 밋업의 그룹이 아니에요.</Empty>
+            </Section>
+          </Content>
         ) : error ? (
           <ErrorRetry message={error} onRetry={reload} />
         ) : (
@@ -39,13 +41,15 @@ export function GroupDetailScreen() {
   return (
     <>
       <TopBar title={`${data.group.categoryLabel} · ${data.group.label}`} back />
-      <Section title={`참여자 ${data.group.count}`}>
-        {data.members.length === 0 ? (
-          <Empty>아직 이 그룹에 참여자가 없어요</Empty>
-        ) : (
-          <PersonList people={data.members} onChanged={() => reload()} />
-        )}
-      </Section>
+      <Content>
+        <Section title={`참여자 ${data.group.count}`}>
+          {data.members.length === 0 ? (
+            <Empty>아직 이 그룹에 참여자가 없어요</Empty>
+          ) : (
+            <PersonList people={data.members} onChanged={() => reload()} />
+          )}
+        </Section>
+      </Content>
     </>
   );
 }

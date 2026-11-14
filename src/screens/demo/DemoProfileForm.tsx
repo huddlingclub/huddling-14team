@@ -62,7 +62,7 @@ export function DemoProfileForm({ value, onChange }: { value: ProfileValue; onCh
                   type="button"
                   aria-pressed={on}
                   onClick={() => toggle(c, o)}
-                  className={`h-10 rounded-full border px-4 text-sm ${on ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-300 bg-white'}`}
+                  className={`t-label h-7 rounded-full border px-3 ${on ? 'border-transparent bg-[var(--color-primary-start)] text-[color:var(--color-on-primary)]' : 'border-[color:var(--color-border-emphasized)] bg-[var(--color-background-surface)]'}`}
                 >
                   {o}
                 </button>
