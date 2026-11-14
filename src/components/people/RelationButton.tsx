@@ -5,7 +5,7 @@ import { Check, Clock, UserCheck, UserPlus, type LucideIcon } from 'lucide-react
 import { useState } from 'react';
 import { useToast } from '@/components/feedback/Toast';
 import { centerSnap, iconProps } from '@/components/ui';
-import { api } from '@/lib/client';
+import { api, goLogin } from '@/lib/client';
 import type { RelationView } from '@/lib/types';
 
 const PRIMARY = 'bg-[var(--color-accent)] text-[color:var(--color-on-accent)]';
@@ -49,6 +49,7 @@ export function RelationButton({
         : await api<{ relation: RelationView }>('/api/relations', { method: 'POST', body: { toId: personId } });
     setBusy(false);
     if (!r.ok) {
+      if (r.status === 401) return goLogin(); // 로그인이 풀렸으면 로그인 화면으로 (프로필에서는 로그인 뒤 돌아온다)
       toast(r.error, 'error'); // 실패하면 상태를 바꾸지 않는다 (PRD §4)
       return;
     }
