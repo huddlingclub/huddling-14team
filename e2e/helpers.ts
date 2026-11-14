@@ -1,14 +1,26 @@
 import { expect, type APIRequestContext, type Page } from '@playwright/test';
 import { Pool } from 'pg';
 
-// 테스트용 DB 접근 (.env.local) — 선택지 ID 조회와 정리에만 쓴다
+// 테스트용 DB 접근 — 선택지 ID 조회와 정리에만 쓴다.
+// 운영 DB(개발용 주소와 같은 DB)에는 실제 참여자가 있어서, 테스트 계정이 사람들 화면에 보이지 않게 로컬 DB에서만 돌린다.
 let pool: Pool | null = null;
 export function db() {
   if (!pool) {
     const url = process.env.DATABASE_URL ?? readEnv('DATABASE_URL');
+    const host = new URL(url).hostname;
+    if (!['localhost', '127.0.0.1', '[::1]'].includes(host) && process.env.E2E_ALLOW_REMOTE_DB !== '1') {
+      throw new Error(
+        '자동 점검은 로컬 테스트 DB에서만 돌려요. README "자동 점검"대로 DATABASE_URL을 로컬 DB로 지정해 주세요.',
+      );
+    }
     pool = new Pool({ connectionString: url.replace(/sslmode=require\b/, 'sslmode=verify-full'), max: 2 });
   }
   return pool;
+}
+
+export async function closeDb() {
+  await pool?.end();
+  pool = null;
 }
 
 function readEnv(key: string) {

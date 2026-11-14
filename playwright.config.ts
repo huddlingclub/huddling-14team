@@ -2,11 +2,13 @@ import { defineConfig, devices } from '@playwright/test';
 
 /**
  * 휴대폰 화면 자동 점검 (CUAgain e2e 설정을 가져와 맞춤).
- * 개발 서버(3200)와 .env.local의 DB를 쓴다. 테스트가 만든 계정은 아이디가 qa_e2e_로 시작하고 끝나면 지운다.
- * 실행: npm run test:e2e
+ * 개발 서버(3200)와 로컬 테스트 DB를 쓴다 — 운영 DB에는 실제 참여자가 있어서 로컬 DB가 아니면 시작하지 않는다.
+ * 테스트가 만든 계정은 아이디가 qa_e2e_로 시작하고 끝나면 지운다.
+ * 실행: DATABASE_URL=postgresql://localhost/<테스트 DB> npm run test:e2e  (README "자동 점검")
  */
 export default defineConfig({
   testDir: './e2e',
+  globalSetup: './e2e/setup.ts',
   globalTeardown: './e2e/teardown.ts',
   timeout: 60_000,
   fullyParallel: false,
