@@ -1,7 +1,7 @@
-// 도메인 타입 — ERD.md 기준. 바꾸려면 개발자 A·B 합의 (WORK_SPLIT.md 4장).
+// 네트워킹 도메인 타입 — ERD.md 기준. 화면과 API가 같이 쓴다.
 
 export type Category = 'cohort' | 'role' | 'team' | 'region';
-/** 선택형 태그 ID = 그룹 키. 예: 'team:14조', 'role:기획자' */
+/** 그룹 키 = '항목:값'. 예: 'team:14조'. DB tag(category, label)와 1:1 */
 export type TagId = `${Category}:${string}`;
 
 export interface Participant {
@@ -9,40 +9,32 @@ export interface Participant {
   displayName: string;
   /** 선택형 태그. 기수(cohort)는 정확히 1개, 나머지는 0개 이상 */
   tags: TagId[];
-  /** 기타 자유 태그 (앞뒤 공백 제거, 참여자별 중복 없음) */
+  /** 기타 자유 태그 */
   customTags: string[];
-  createdAt: string;
-  updatedAt: string;
 }
 
-export interface Account {
-  participantId: string;
-  /** 소문자로 정규화해 저장 */
-  loginId: string;
-  passwordHash: string;
-  salt: string;
-}
-
-export interface Session {
-  token: string;
-  participantId: string;
-  createdAt: string;
-}
-
-/** 두 사람 사이 관계는 한 건. a < b 로 정렬해 저장 */
+/** 두 사람 사이 관계 한 건 (a < b) */
 export interface Relation {
   a: string;
   b: string;
   requesterId: string;
-  requestedAt: string;
-  acceptedAt: string | null;
+  acceptedAt: Date | string | null;
 }
 
-export interface DB {
+export interface CatalogTag {
+  id: string;
+  category: Category;
+  label: string;
+  key: TagId;
+}
+
+/** 한 번의 요청에서 쓰는 밋업 전체 스냅샷 */
+export interface Network {
   participants: Participant[];
-  accounts: Account[];
-  sessions: Session[];
   relations: Relation[];
+  /** 항목 → 선택지 순서로 정렬한 태그 카탈로그 */
+  catalog: CatalogTag[];
+  rank: Map<TagId, number>;
 }
 
 /** 화면 버튼 4상태: 친구 요청 · 요청 보냄 · 수락 · 친구 */

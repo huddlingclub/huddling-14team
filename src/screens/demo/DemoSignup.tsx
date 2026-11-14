@@ -1,14 +1,13 @@
 'use client';
-// [교체 예정] PG-102 온보딩(가입) — 계정 만들기 + 내 프로필 (화면정의서 01)
-// QR로 들어왔으면 저장 후 스캔한 상대 프로필로 돌아간다
+// [데모 전용] PG-102 온보딩(가입) — 계정 만들기 + 내 프로필. QR로 들어왔으면 저장 후 스캔한 상대 프로필로 돌아간다
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { Button, TopBar } from '@/components/ui';
 import { api, safeNext } from '@/lib/client';
-import { emptyProfile, ProfileForm, type ProfileValue } from './ProfileForm';
+import { DemoProfileForm, emptyProfile, type ProfileValue } from './DemoProfileForm';
 
-export function SignupScreen() {
+export function DemoSignup() {
   const router = useRouter();
   const next = safeNext(useSearchParams().get('next'));
   const fromQr = next.startsWith('/p/');
@@ -23,10 +22,7 @@ export function SignupScreen() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const r = await api('/api/auth/signup', {
-      method: 'POST',
-      body: { loginId, password, passwordConfirm, ...profile },
-    });
+    const r = await api('/api/auth/signup', { method: 'POST', body: { loginId, password, passwordConfirm, ...profile } });
     setBusy(false);
     if (r.ok) router.replace(next);
     else setError(r.error); // 실패하면 입력을 그대로 두고 다시 시도
@@ -41,41 +37,21 @@ export function SignupScreen() {
           <h2 className="text-base font-bold">계정 만들기</h2>
           <label className="block">
             <span className="text-sm font-semibold">아이디 *</span>
-            <input
-              value={loginId}
-              onChange={(e) => setLoginId(e.target.value)}
-              autoComplete="username"
-              autoCapitalize="none"
-              placeholder="영문·숫자 4~20자"
-              className={input}
-            />
+            <input value={loginId} onChange={(e) => setLoginId(e.target.value)} autoComplete="username" autoCapitalize="none" className={input} />
           </label>
           <label className="block">
             <span className="text-sm font-semibold">비밀번호 *</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="new-password"
-              placeholder="8자 이상"
-              className={input}
-            />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" className={input} />
           </label>
           <label className="block">
             <span className="text-sm font-semibold">비밀번호 확인 *</span>
-            <input
-              type="password"
-              value={passwordConfirm}
-              onChange={(e) => setPasswordConfirm(e.target.value)}
-              autoComplete="new-password"
-              className={input}
-            />
+            <input type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} autoComplete="new-password" className={input} />
           </label>
         </section>
 
         <section className="space-y-4 border-t border-gray-100 px-4 py-5">
           <h2 className="text-base font-bold">내 프로필</h2>
-          <ProfileForm value={profile} onChange={setProfile} />
+          <DemoProfileForm value={profile} onChange={setProfile} />
         </section>
 
         <div className="sticky bottom-0 mt-auto space-y-2 border-t border-gray-100 bg-white px-4 py-3">

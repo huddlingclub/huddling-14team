@@ -1,16 +1,15 @@
-import { Suspense } from 'react';
-import { Loading } from '@/components/feedback/States';
-import { RequireAuth } from '@/components/RequireAuth';
+import type { ReactNode } from 'react';
+import { ToastProvider } from '@/components/feedback/Toast';
 import { TabBar } from '@/components/ui/TabBar';
 
-// 로그인한 사람만 들어오는 영역 — 하단 탭 4개 (홈 · 추천 · 그룹 · 마이)
-export default function TabsLayout({ children }: { children: React.ReactNode }) {
+// 하단 탭 4개(홈 · 추천 · 그룹 · 마이)가 붙는 영역. 로그인 확인은 각 페이지가 한다
+export default function TabsLayout({ children }: { children: ReactNode }) {
   return (
-    <Suspense fallback={<Loading />}>
-      <RequireAuth>
-        <main className="flex flex-1 flex-col">{children}</main>
+    <ToastProvider>
+      <div className="tabs-shell mx-auto flex min-h-dvh w-full max-w-[32rem] flex-col">
+        <div className="tabs-body flex flex-1 flex-col">{children}</div>
         <TabBar />
-      </RequireAuth>
-    </Suspense>
+      </div>
+    </ToastProvider>
   );
 }

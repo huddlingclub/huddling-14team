@@ -1,11 +1,10 @@
-import { Suspense } from 'react';
-import { Loading } from '@/components/feedback/States';
+import { redirect } from 'next/navigation';
+import { DEMO } from '@/lib/demo';
+import { getSession } from '@/lib/session';
 import { RecommendScreen } from '@/screens/RecommendScreen';
 
-export default function Page() {
-  return (
-    <Suspense fallback={<Loading />}>
-      <RecommendScreen />
-    </Suspense>
-  );
+// PG-301 친구추천
+export default async function Recommend() {
+  if (!DEMO && !(await getSession())) redirect('/login');
+  return <RecommendScreen />;
 }

@@ -1,13 +1,10 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
+import { redirect } from 'next/navigation';
+import { DEMO } from '@/lib/demo';
+import { getSession } from '@/lib/session';
+import { HomeScreen } from '@/screens/HomeScreen';
 
+// PG-201 홈 — 내 관계
 export default async function Home() {
-  if (!(await getSession())) redirect("/login");
-  return (
-    <main className="account-shell">
-      <header className="account-header"><h1>홈</h1></header>
-      <Link href="/me" className="account-link">마이페이지</Link>
-    </main>
-  );
+  if (!DEMO && !(await getSession())) redirect('/login');
+  return <HomeScreen />;
 }

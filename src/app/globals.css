@@ -116,3 +116,22 @@ body {
   display: grid;
   gap: 0.75rem;
 }
+
+/* 네트워킹 화면(홈·추천·그룹·프로필·QR·데모 계정 화면)은 디자인 적용 전까지 밝은 배경으로 고정한다.
+   다크 모드에서 테마의 밝은 글자색이 흰 배경 위에 올라가 안 보이는 것을 막는다.
+   계정 담당 화면(account-shell)이 들어 있을 때는 그 화면의 테마를 그대로 둔다. */
+.light-screen,
+.tabs-shell:not(:has(.account-shell)) {
+  background: #fff;
+  color: #111827;
+  color-scheme: light;
+  /* 테마 리셋이 제목·문단에 쓰는 글자색 변수 — 다크 모드 값(흰색)을 덮는다 */
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+}
+
+/* 하단 탭 영역: 마이페이지(account-shell)도 탭 바 위 높이에 맞춘다 */
+.tabs-body .account-shell {
+  flex: 1;
+  min-height: 0;
+}

@@ -1,8 +1,8 @@
 'use client';
-// [교체 예정] 프로필 입력 폼 — 온보딩(가입)과 마이페이지가 같이 쓴다 (ERD.md 입력 규칙)
-// 이름·기수 필수 · 기수 1개 · 직무/조/지역 여러 개 · 기타 태그 개별 추가·삭제
+// [데모 전용] 프로필 입력 폼 — 이름·기수 필수 · 기수 1개 · 직무/조/지역 여러 개 · 기타 태그 개별 추가·삭제
 import { useState } from 'react';
-import { CATEGORIES, tagId, type CategoryDef } from '@/lib/tags';
+import { DEMO_CATEGORIES, type CategoryDef } from '@/lib/demo';
+import { keyOf } from '@/lib/tags';
 import type { TagId } from '@/lib/types';
 
 export interface ProfileValue {
@@ -13,11 +13,11 @@ export interface ProfileValue {
 
 export const emptyProfile = (): ProfileValue => ({ displayName: '', tags: [], customTags: [] });
 
-export function ProfileForm({ value, onChange }: { value: ProfileValue; onChange: (v: ProfileValue) => void }) {
+export function DemoProfileForm({ value, onChange }: { value: ProfileValue; onChange: (v: ProfileValue) => void }) {
   const [custom, setCustom] = useState('');
 
   function toggle(c: CategoryDef, label: string) {
-    const id = tagId(c.key, label);
+    const id = keyOf(c.key, label);
     const has = value.tags.includes(id);
     const tags = c.multi
       ? has
@@ -29,8 +29,7 @@ export function ProfileForm({ value, onChange }: { value: ProfileValue; onChange
 
   function addCustom() {
     const t = custom.trim();
-    if (!t || value.customTags.includes(t)) return setCustom('');
-    onChange({ ...value, customTags: [...value.customTags, t] });
+    if (t && !value.customTags.includes(t)) onChange({ ...value, customTags: [...value.customTags, t] });
     setCustom('');
   }
 
@@ -47,7 +46,7 @@ export function ProfileForm({ value, onChange }: { value: ProfileValue; onChange
         />
       </label>
 
-      {CATEGORIES.map((c) => (
+      {DEMO_CATEGORIES.map((c) => (
         <fieldset key={c.key}>
           <legend className="text-sm font-semibold">
             {c.label}
@@ -56,7 +55,7 @@ export function ProfileForm({ value, onChange }: { value: ProfileValue; onChange
           </legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {c.options.map((o) => {
-              const on = value.tags.includes(tagId(c.key, o));
+              const on = value.tags.includes(keyOf(c.key, o));
               return (
                 <button
                   key={o}
@@ -82,7 +81,7 @@ export function ProfileForm({ value, onChange }: { value: ProfileValue; onChange
             value={custom}
             onChange={(e) => setCustom(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
+              if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
                 e.preventDefault();
                 addCustom();
               }
