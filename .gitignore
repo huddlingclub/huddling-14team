@@ -6,3 +6,7 @@
 .env*
 !.env.example
 .vercel
+
+# 자동 점검 결과
+/test-results/
+/playwright-report/
