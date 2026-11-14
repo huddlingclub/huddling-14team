@@ -1,17 +1,10 @@
 'use client';
 // 화면 → API 호출. 실패해도 예외 대신 { ok: false }로 돌려 화면이 상태를 유지하게 한다 (PG-902)
-import { useCallback, useEffect, useState } from 'react';
-import { DEMO, demoApi } from './demo';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; status: number; error: string };
 
 export async function api<T>(path: string, init?: { method?: string; body?: unknown }): Promise<ApiResult<T>> {
-  if (DEMO) {
-    // 데모 모드: 서버 대신 브라우저 안의 샘플 데이터로 응답한다
-    const r = await demoApi(path, init);
-    if (r.status < 400) return { ok: true, data: r.data as T };
-    return { ok: false, status: r.status, error: (r.data as { message: string }).message };
-  }
   try {
     const res = await fetch(path, {
       method: init?.method ?? 'GET',
@@ -29,7 +22,7 @@ export async function api<T>(path: string, init?: { method?: string; body?: unkn
 
 /** 로그인이 끊겼으면 로그인 화면으로. QR로 연 프로필(/p/…)은 로그인 뒤 돌아온다 */
 export function goLogin() {
-  const here = window.location.pathname + (DEMO ? window.location.search : '');
+  const here = window.location.pathname;
   window.location.assign(here.startsWith('/p/') ? `/login?next=${encodeURIComponent(here)}` : '/login');
 }
 
@@ -45,15 +38,23 @@ interface LoadState<T> {
   loading: boolean;
 }
 
-/** 화면 진입 시점에 조회 (실시간 갱신 아님 — 화면정의서 02 "갱신 시점") */
+/** 화면 진입 시점에 조회 (실시간 갱신 아님 — 화면정의서 02 "갱신 시점").
+ *  다른 앱에 갔다가 돌아오면(15초 이상 지났을 때) 조용히 다시 불러와 받은 요청·수락 결과를 반영한다.
+ *  조용한 새로고침이 실패하면 지금 보이는 내용을 그대로 둔다 */
 export function useApi<T>(path: string) {
   const [state, setState] = useState<LoadState<T>>({ data: null, error: null, status: 0, loading: true });
   const [nonce, setNonce] = useState(0);
+  const quiet = useRef(false);
+  const lastAt = useRef(0);
   useEffect(() => {
     let alive = true;
+    const silent = quiet.current;
+    quiet.current = false;
     api<T>(path).then((r) => {
       if (!alive) return;
+      lastAt.current = Date.now();
       if (!r.ok && r.status === 401) return goLogin();
+      if (!r.ok && silent) return setState((s) => ({ ...s, loading: false }));
       setState(
         r.ok
           ? { data: r.data, error: null, status: 200, loading: false }
@@ -64,6 +65,15 @@ export function useApi<T>(path: string) {
       alive = false;
     };
   }, [path, nonce]);
+  useEffect(() => {
+    const onShow = () => {
+      if (document.visibilityState !== 'visible' || Date.now() - lastAt.current < 15_000) return;
+      quiet.current = true;
+      setNonce((n) => n + 1);
+    };
+    document.addEventListener('visibilitychange', onShow);
+    return () => document.removeEventListener('visibilitychange', onShow);
+  }, []);
   const reload = useCallback(() => {
     setState((s) => ({ ...s, loading: true }));
     setNonce((n) => n + 1);

@@ -13,7 +13,8 @@ export async function POST(request: Request) {
   if (!validUsername(username) || !password || password.length > limits.passwordMax) return invalid();
 
   try {
-    if (!(await allowAttempt(`login:address:${requesterAddress(request)}`, 30))) {
+    // 같은 와이파이(같은 IP)를 여러 명이 쓰므로 IP당 한도는 넉넉히, 아이디당 한도(5회)로 대입 공격을 막는다
+    if (!(await allowAttempt(`login:address:${requesterAddress(request)}`, 300))) {
       return fail("로그인 시도가 많아요. 잠시 후 다시 시도해 주세요.", 429);
     }
     if (!(await allowAttempt(`login:username:${username}`, 5))) {

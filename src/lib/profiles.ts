@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import type { Profile, ProfileInput, Tag } from "@/lib/profile-input";
 
 export async function getTagOptions() {
-  return (await db().query<Tag>("SELECT id, category, label FROM tag ORDER BY length(label), label")).rows;
+  return (await db().query<Tag>("SELECT id, category, label FROM tag ORDER BY sort, length(label), label")).rows;
 }
 
 export async function getProfile(userId: string): Promise<Profile | null> {

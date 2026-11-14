@@ -1,6 +1,7 @@
 // 공통점 · 관계 · 그룹 · 추천 계산 (ERD.md "공통점 계산" · "친구 상태와 쓰기 규칙")
 import { CATEGORIES, categoryLabel, cohortOf, splitKey, tagLabel } from './tags';
 import type {
+  FriendGroups,
   GroupSummary,
   HomeData,
   HomeGroup,
@@ -47,7 +48,15 @@ export function getParticipant(net: Network, id: string) {
 }
 
 export function selfProfile(net: Network, p: Participant): SelfProfile {
-  return { id: p.id, displayName: p.displayName, tags: sortTags(net, p.tags), customTags: p.customTags, cohort: cohortOf(p.tags) };
+  return { id: p.id, displayName: p.displayName, tags: sortTags(net, p.tags), customTags: p.customTags, cohort: cohortOf(p.tags), photo: p.photo ?? null };
+}
+
+/** 이름 아래 보조 줄 — 기수 · 직무 (· 조) */
+function metaOf(net: Network, p: Participant, categories: string[]) {
+  return sortTags(net, p.tags)
+    .filter((t) => categories.some((c) => t.startsWith(`${c}:`)))
+    .map(tagLabel)
+    .join(' · ');
 }
 
 export function personRow(net: Network, viewer: Participant, p: Participant): PersonRow {
@@ -59,6 +68,8 @@ export function personRow(net: Network, viewer: Participant, p: Participant): Pe
     overlap: isMe ? [] : overlap(net, viewer, p),
     relation: isMe ? 'none' : relationView(findRelation(net, viewer.id, p.id), viewer.id),
     isMe,
+    photo: p.photo ?? null,
+    meta: metaOf(net, p, ['cohort', 'role']),
   };
 }
 
@@ -82,6 +93,8 @@ export function profileView(net: Network, viewer: Participant, p: Participant): 
     overlap: row.overlap,
     relation: row.relation,
     isMe: row.isMe,
+    photo: row.photo,
+    meta: metaOf(net, p, ['cohort', 'role', 'team']),
   };
 }
 
@@ -156,4 +169,18 @@ export function homeData(net: Network, viewer: Participant): HomeData {
     return [{ ...summary, members: others.slice(0, HOME_PREVIEW), others: others.length }];
   });
   return { me: selfProfile(net, viewer), received, groups, friends };
+}
+
+/** 그룹 탭 — 내 친구와, 친구들이 가진 태그(친구 수 포함). 태그 순서는 카탈로그 순서(기수 → 직무 → 조 → 지역) */
+export function friendGroups(net: Network, viewer: Participant): FriendGroups {
+  const friends = relationLists(net, viewer).friends.map((row) => ({
+    ...row,
+    tags: sortTags(net, getParticipant(net, row.id)?.tags ?? []),
+  }));
+  const count = new Map<TagId, number>();
+  for (const f of friends) for (const t of f.tags) count.set(t, (count.get(t) ?? 0) + 1);
+  const tags = net.catalog
+    .filter((t) => count.has(t.key))
+    .map((t) => ({ key: t.key, category: t.category, label: t.label, count: count.get(t.key) ?? 0, mine: viewer.tags.includes(t.key) }));
+  return { friends, tags };
 }

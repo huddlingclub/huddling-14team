@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import { DEMO } from '@/lib/demo';
 import { getSession } from '@/lib/session';
 import { ProfileScreen } from '@/screens/ProfileScreen';
 
@@ -7,6 +6,6 @@ import { ProfileScreen } from '@/screens/ProfileScreen';
 // 비로그인이면 로그인·가입을 거쳐 이 프로필로 돌아온다 (README "계정·프로필 연동")
 export default async function Profile({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!DEMO && !(await getSession())) redirect(`/login?next=${encodeURIComponent(`/p/${id}`)}`);
+  if (!(await getSession())) redirect(`/login?next=${encodeURIComponent(`/p/${id}`)}`);
   return <ProfileScreen />;
 }

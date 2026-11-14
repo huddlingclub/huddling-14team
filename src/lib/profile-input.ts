@@ -14,7 +14,8 @@ export type ProfileInput = {
 };
 export type Profile = ProfileInput & { userId: string };
 
-export const limits = { name: 40, customLength: 40, customCount: 20, passwordMin: 15, passwordMax: 128 };
+// 비밀번호 최소 길이: 밋업 현장에서 휴대폰으로 바로 입력할 수 있게 8자로 둔다 (화면정의서 제안값)
+export const limits = { name: 40, customLength: 40, customCount: 20, passwordMin: 8, passwordMax: 128 };
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
 export function destination(value: unknown) {
@@ -46,6 +47,7 @@ export function readProfile(input: Record<string, unknown>, options: Tag[]): Pro
     const values: unknown = (selected as Record<string, unknown>)[key];
     if (!Array.isArray(values)) throw new Error(`${label} 선택값을 확인해 주세요.`);
     if (key === "cohort" && values.length !== 1) throw new Error("기수를 하나 선택해 주세요.");
+    if (key === "team" && values.length > 1) throw new Error("밋업 조는 하나만 선택해 주세요.");
     const allowed = new Set(options.filter((tag) => tag.category === key).map((tag) => tag.id));
     if (values.some((value) => typeof value !== "string" || !allowed.has(value))) {
       throw new Error(`${label} 선택값을 확인해 주세요.`);

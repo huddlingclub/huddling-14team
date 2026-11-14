@@ -7,9 +7,9 @@ import type { CatalogTag, Category, Network, Participant } from '@/lib/types';
 
 export async function loadNetwork(): Promise<Network> {
   const pool = db();
-  const [tags, people, picked, custom, relations] = await Promise.all([
+  const [tags, people, picked, custom, relations, photos] = await Promise.all([
     pool.query<{ id: string; category: Category; label: string }>(
-      'SELECT id, category, label FROM tag ORDER BY length(label), label',
+      'SELECT id, category, label FROM tag ORDER BY sort, length(label), label',
     ),
     pool.query<{ id: string; displayName: string }>('SELECT id, display_name AS "displayName" FROM participant'),
     pool.query<{ participantId: string; category: Category; label: string }>(
@@ -22,6 +22,9 @@ export async function loadNetwork(): Promise<Network> {
     pool.query<{ a: string; b: string; requesterId: string; acceptedAt: Date | null }>(
       `SELECT participant_a_id AS a, participant_b_id AS b, requester_id AS "requesterId", accepted_at AS "acceptedAt"
        FROM friend_relation`,
+    ),
+    pool.query<{ participantId: string; v: string }>(
+      `SELECT participant_id AS "participantId", floor(extract(epoch FROM updated_at))::bigint::text AS v FROM participant_photo`,
     ),
   ]);
 
@@ -37,6 +40,10 @@ export async function loadNetwork(): Promise<Network> {
   );
   for (const r of picked.rows) byId.get(r.participantId)?.tags.push(keyOf(r.category, r.label));
   for (const r of custom.rows) byId.get(r.participantId)?.customTags.push(r.label);
+  for (const r of photos.rows) {
+    const p = byId.get(r.participantId);
+    if (p) p.photo = `/api/photos/${r.participantId}?v=${r.v}`;
+  }
 
   return { participants: [...byId.values()], relations: relations.rows, catalog, rank };
 }

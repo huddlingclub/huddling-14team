@@ -23,7 +23,8 @@ export async function POST(request: Request) {
     } catch (error) {
       return fail((error as Error).message, 400);
     }
-    if (!(await allowAttempt(`signup:${requesterAddress(request)}`, 15))) {
+    // 밋업 현장은 같은 와이파이(같은 IP)로 여러 명이 동시에 가입하므로 IP당 한도를 넉넉히 둔다
+    if (!(await allowAttempt(`signup:${requesterAddress(request)}`, 120))) {
       return fail("요청이 많아요. 잠시 후 다시 시도해 주세요.", 429);
     }
     const passwordHash = await hashPassword(password);

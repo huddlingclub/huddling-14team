@@ -11,6 +11,8 @@ export interface Participant {
   tags: TagId[];
   /** 기타 자유 태그 */
   customTags: string[];
+  /** 프로필 사진 주소 (/api/photos/:id?v=…). 없으면 마스코트 */
+  photo?: string | null;
 }
 
 /** 두 사람 사이 관계 한 건 (a < b) */
@@ -49,6 +51,9 @@ export interface PersonRow {
   overlap: string[];
   relation: RelationView;
   isMe: boolean;
+  photo: string | null;
+  /** 이름 아래 보조 줄 — "1기 · 디자이너" (기수 · 직무) */
+  meta: string;
 }
 
 export interface SelfProfile {
@@ -57,6 +62,7 @@ export interface SelfProfile {
   tags: TagId[];
   customTags: string[];
   cohort: string | null;
+  photo: string | null;
 }
 
 export interface ProfileView {
@@ -68,6 +74,9 @@ export interface ProfileView {
   overlap: string[];
   relation: RelationView;
   isMe: boolean;
+  photo: string | null;
+  /** "1기 · 마케터 · 14조" (기수 · 직무 · 조) */
+  meta: string;
 }
 
 export interface GroupSummary {
@@ -95,4 +104,25 @@ export interface HomeData {
 
 export interface RecommendItem extends PersonRow {
   count: number;
+}
+
+/** 그룹 탭 — 내 친구를 태그별로 모아 본다 */
+export interface FriendRow extends PersonRow {
+  /** 이 친구의 선택형 태그 (칩으로 걸러 보기용) */
+  tags: TagId[];
+}
+
+export interface FriendTag {
+  key: TagId;
+  category: Category;
+  label: string;
+  /** 이 태그를 가진 내 친구 수 */
+  count: number;
+  /** 나도 가진 태그인지 */
+  mine: boolean;
+}
+
+export interface FriendGroups {
+  friends: FriendRow[];
+  tags: FriendTag[];
 }
