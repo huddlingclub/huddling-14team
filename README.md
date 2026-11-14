@@ -60,4 +60,4 @@ Next.js App Router, Node.js 22, PostgreSQL(Neon)을 사용한다. 화면은 Figm
 
 ## 배포
 
-Vercel 프로젝트 `huddling-14team`(Git 연동 없음)에 CLI로 올린다: `vercel deploy --prod`. DB는 Vercel Marketplace의 Neon(`huddling-14team-db`)이고 `DATABASE_URL`은 통합이 넣어 준다.
+Vercel 프로젝트 `huddling-14team`(Git 연동 없음)에 CLI로 올린다: `vercel deploy --prod`. 서버 함수는 DB와 같은 싱가포르(`vercel.json`의 `regions: ["sin1"]`)에서 돈다 — 기본값(미국 동부)으로 두면 DB 조회마다 태평양을 왕복해 화면이 1~5초씩 걸린다. DB는 Vercel Marketplace의 Neon(`huddling-14team-db`)이고 `DATABASE_URL`은 통합이 넣어 준다.
