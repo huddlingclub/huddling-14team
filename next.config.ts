@@ -18,6 +18,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // 이 서비스는 이미지 변환(/_next/image)을 쓰지 않는다. 앱 아이콘 폴더만 남기고 나머지 경로(API · 사진 포함)는 400으로 닫는다
+  images: { localPatterns: [{ pathname: '/icons/**', search: '' }] },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },
