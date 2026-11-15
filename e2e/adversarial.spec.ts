@@ -444,3 +444,137 @@ test('공유 미리보기 · 파비콘 · 앱 아이콘이 연결돼 있다', as
     expect((await request.get(path)).status(), path).toBe(200);
   }
 });
+
+// ───────── 2차 (2026-11-15) — 1차에서 안 본 곳: 이미지 변환 경로 · 다른 사이트 읽기 허용 · 동시 쏟아붓기 · 쉬운 비밀번호 · 저장(캐시) · 큰 요청 ─────────
+
+test('이미지 변환 경로(/_next/image)로 남의 사진이나 API 응답을 꺼낼 수 없다', async ({ browser, baseURL }) => {
+  const P = await browser.newContext({ baseURL });
+  const me = await signupApi(P.request, { name: 'QA변환' });
+  const { jpeg } = await images(await P.newPage());
+  const up = (await (await P.request.post('/api/me/photo', { headers: SAME, data: { dataUrl: jpeg } })).json()) as { photo: string };
+  const anon = await browser.newContext({ baseURL });
+  const via = (ctx: typeof P, target: string) => ctx.request.get(`/_next/image?url=${encodeURIComponent(target)}&w=64&q=75`);
+  const targets = [up.photo, `/api/photos/${me.userId}`, '/api/home', '/api/me'];
+  for (const t of targets) expect((await via(anon, t)).status(), `비로그인 ${t}`).not.toBe(200);
+  // 로그인한 사람이 먼저 받아 가서 변환 결과가 서버에 저장되더라도, 그 뒤 비로그인에게 나가면 안 된다
+  const mine: number[] = [];
+  for (const t of targets) mine.push((await via(P, t)).status());
+  for (const t of targets) expect((await via(anon, t)).status(), `로그인한 사람이 받은 뒤 비로그인 ${t}`).not.toBe(200);
+  // 이 서비스는 이미지 변환을 쓰지 않으므로 로그인한 사람에게도 닫혀 있어야 한다
+  expect(mine, '로그인한 사람의 변환 요청').toEqual([400, 400, 400, 400]);
+  await anon.close();
+  await P.close();
+});
+
+test('다른 사이트의 스크립트는 응답을 읽을 수 없다 (읽기 허용 머리말 없음)', async ({ browser, baseURL }) => {
+  const P = await browser.newContext({ baseURL });
+  await signupApi(P.request, { name: 'QA읽기허용' });
+  for (const path of ['/api/home', '/api/me', '/api/friends', '/api/auth/username?u=abc']) {
+    const h = (await P.request.get(path, { headers: { Origin: 'https://evil.example' } })).headers();
+    expect(h['access-control-allow-origin'], path).toBeUndefined();
+    expect(h['access-control-allow-credentials'], path).toBeUndefined();
+  }
+  const pre = await P.request.fetch('/api/relations', {
+    method: 'OPTIONS',
+    headers: { Origin: 'https://evil.example', 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'content-type' },
+  });
+  expect(pre.headers()['access-control-allow-origin']).toBeUndefined();
+  await P.close();
+});
+
+test('로그인한 사람의 응답은 중간 서버나 브라우저에 저장되지 않는다', async ({ browser, baseURL }) => {
+  const P = await browser.newContext({ baseURL });
+  const me = await signupApi(P.request, { name: 'QA저장금지', team: '12조' });
+  for (const path of ['/api/home', '/api/me', '/api/friends', '/api/relations', '/api/relations/count', '/api/recommend', '/api/groups', `/api/groups/${encodeURIComponent('team:12조')}`, `/api/profiles/${me.userId}`]) {
+    const res = await P.request.get(path);
+    expect(res.status(), path).toBe(200);
+    expect(res.headers()['cache-control'], path).toContain('no-store');
+  }
+  for (const path of ['/home', '/me', '/me/edit', '/qr']) {
+    const cc = (await P.request.get(path)).headers()['cache-control'] ?? '';
+    expect(/no-store|private/.test(cc), `${path}: ${cc}`).toBe(true);
+  }
+  await P.close();
+});
+
+test('동시에 쏟아부어도 한도를 넘지 못한다 (친구 요청 60 · 사진 10)', async ({ browser, baseURL }) => {
+  const A = await browser.newContext({ baseURL });
+  const B = await browser.newContext({ baseURL });
+  await signupApi(A.request, { name: 'QA동시쏟기' });
+  const b = await signupApi(B.request, { name: 'QA동시받기' });
+  const flood = await Promise.all(
+    Array.from({ length: 90 }, () => A.request.post('/api/relations', { headers: SAME, data: { toId: b.userId } }).then((r) => r.status())),
+  );
+  expect(flood.filter((c) => c === 200).length, '통과한 친구 요청 수').toBe(60);
+  expect(flood.filter((c) => c === 429).length).toBe(30);
+  const { jpeg } = await images(await A.newPage());
+  const photos = await Promise.all(
+    Array.from({ length: 20 }, () => A.request.post('/api/me/photo', { headers: SAME, data: { dataUrl: jpeg } }).then((r) => r.status())),
+  );
+  expect(photos.filter((c) => c === 200).length, '통과한 사진 올리기 수').toBe(10);
+  await A.close();
+  await B.close();
+});
+
+test('쉬운 비밀번호로는 가입할 수 없다 (흔한 값 · 아이디와 같은 값 · 한 글자 반복)', async ({ request }) => {
+  const cohort = await tagId('cohort', '1기');
+  const signup = async (username: string, password: string) =>
+    (await request.post('/api/auth/signup', {
+      headers: SAME,
+      data: { username, password, displayName: 'QA쉬운비번', tags: { cohort: [cohort], role: [], team: [], region: [] }, customTags: [] },
+    })).status();
+  const name = uid();
+  for (const password of ['12345678', 'password', 'qwer1234', '1q2w3e4r', 'aaaaaaaa', '00000000', name, name.toUpperCase(), `${name}123`]) {
+    expect(await signup(name, password), password === name ? '아이디와 같은 값' : password).toBe(400);
+  }
+  expect((await db().query('SELECT 1 FROM account WHERE username = $1', [name])).rowCount).toBe(0);
+  expect(await signup(name, PASSWORD)).toBe(201);
+});
+
+test('이름 장난 2: 겹침 기호만 · 빈칸으로 보이는 글자만으로 된 이름은 거절', async ({ browser, baseURL }) => {
+  const P = await browser.newContext({ baseURL });
+  await signupApi(P.request, { name: 'QA이름2' });
+  const cohort = await tagId('cohort', '1기');
+  const patch = async (displayName: string) =>
+    (await P.request.patch('/api/me', { headers: SAME, data: { displayName, tags: { cohort: [cohort], role: [], team: [], region: [] }, customTags: [] } })).status();
+  expect(await patch(ch(0x0301, 0x0302)), '겹침 기호만').toBe(400);
+  expect(await patch(ch(0x17b4, 0x17b5)), '보이지 않는 모음 기호만').toBe(400);
+  expect(await patch(ch(0xe000, 0xe001)), '쓰임이 정해지지 않은 글자만').toBe(400);
+  expect(await patch(ch(0xfffc)), '빈 상자로 보이는 글자만').toBe(400);
+  expect(await patch(`${ch(0x200d)}${ch(0xfe0f)}`), '잇는 글자만').toBe(400);
+  // 그림 글자 · 한자 · 숫자만으로 된 이름은 된다
+  expect(await patch(`${String.fromCodePoint(0x1f427)} 7`)).toBe(200);
+  await P.close();
+});
+
+test('아주 큰 요청: 서버 오류 없이 거절한다', async ({ browser, baseURL }) => {
+  const P = await browser.newContext({ baseURL });
+  await signupApi(P.request, { name: 'QA큰요청' });
+  const cohort = await tagId('cohort', '1기');
+  const big = 'x'.repeat(3_000_000);
+  const a = await P.request.patch('/api/me', { headers: SAME, data: { displayName: big, tags: { cohort: [cohort], role: [], team: [], region: [] }, customTags: [] } });
+  expect([400, 413]).toContain(a.status());
+  const b = await P.request.post('/api/me/photo', { headers: SAME, data: { dataUrl: `data:image/jpeg;base64,${Buffer.alloc(4_000_000, 1).toString('base64')}` } });
+  expect([400, 413]).toContain(b.status());
+  const c = await P.request.post('/api/relations', { headers: SAME, data: { toId: big } });
+  expect([400, 404, 413]).toContain(c.status());
+  expect((await P.request.get('/api/me')).status(), '큰 요청 뒤에도 정상').toBe(200);
+  await P.close();
+});
+
+test('글꼴 스타일은 내용이 바뀌면 불러오지 않는다 (무결성 값) — 그리고 실제로 불러와진다', async ({ page }) => {
+  await page.goto('/login');
+  const link = page.locator('link[rel="stylesheet"][href*="pretendard"]').first();
+  await expect(link).toHaveAttribute('integrity', /^sha384-/);
+  await expect(link).toHaveAttribute('crossorigin', 'anonymous');
+  await page.waitForLoadState('networkidle');
+  const rules = await page.evaluate(() => {
+    const sheet = [...document.styleSheets].find((s) => s.href?.includes('pretendard'));
+    try {
+      return sheet ? sheet.cssRules.length : -1;
+    } catch {
+      return -2;
+    }
+  });
+  expect(rules, '글꼴 스타일 규칙 수').toBeGreaterThan(0);
+});
