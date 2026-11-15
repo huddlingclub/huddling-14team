@@ -151,6 +151,40 @@ test('등록 입력 검사: 빈 칸 · 짧은 비밀번호 · 이미 쓰는 아�
   await P.ctx.close();
 });
 
+test('추가한 선택지(기수 운영진 · 퍼스트펭귄, 직무 기타): 순서 · 등록 · 홈 칩 · 그룹 상세 · 수정', async ({ browser, baseURL }) => {
+  const P = await phone(browser, baseURL);
+  // 등록 화면: 각 칸의 선택지가 이 순서로 있다 ('기타'는 직무 · 근무 지역 두 칸에 있어 칸 안에서 찾는다. 좁은 화면에서는 줄이 바뀐다)
+  await P.page.goto('/signup');
+  await expect(P.page.getByRole('group', { name: /^기수/ }).getByRole('button')).toHaveText(['1기', '2기', '3기', '운영진', '퍼스트펭귄']);
+  await expect(P.page.getByRole('group', { name: /^직무/ }).getByRole('button')).toHaveText(['디자이너', '기획자', '마케터', '개발자', '기타']);
+  // 운영진은 디스코드 명단의 기수가 아니라서 조를 미리 채우지 않는다
+  const match = await P.ctx.request.get(`/api/roster/match?name=${encodeURIComponent(ROSTER_NAME)}&cohort=${encodeURIComponent('운영진')}`);
+  expect(await match.json()).toEqual({ teams: [] });
+
+  // 운영진 · 직무 기타로 등록 → 홈 칩 → 그룹 상세
+  // 기기(프로젝트)마다 이름을 달리한다 — 앞 기기에서 만든 계정이 같은 그룹에 남아 있다
+  const name = `QA다솜${test.info().project.name}`;
+  await signupApi(P.ctx.request, { name, cohort: '운영진', role: ['기타'] });
+  await P.page.goto('/home');
+  for (const key of ['cohort:운영진', 'role:기타']) {
+    // 이 사람은 근무 지역을 고르지 않아 홈의 '기타' 칩은 직무 기타 하나뿐이다
+    await expect(P.page.locator('a[href^="/groups/"]').filter({ hasText: key.split(':')[1] }), key).toHaveCount(1);
+    await P.page.goto(`/groups/${encodeURIComponent(key)}`);
+    await expect(P.page.getByText(name), key).toBeVisible(); // 내 줄은 "이름 (나)"
+    await P.page.goto('/home');
+  }
+
+  // 프로필 수정에서 퍼스트펭귄으로 바꾸면 운영진은 풀린다 (기수는 하나만)
+  await P.page.goto('/me/edit');
+  await P.page.getByRole('button', { name: '퍼스트펭귄', exact: true }).click();
+  await expect(P.page.getByRole('button', { name: '퍼스트펭귄', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(P.page.getByRole('button', { name: '운영진', exact: true })).toHaveAttribute('aria-pressed', 'false');
+  await P.page.getByRole('button', { name: '저장', exact: true }).click();
+  await expect(P.page).toHaveURL(/\/me$/);
+  await expect(P.page.getByText('퍼스트펭귄', { exact: true })).toBeVisible();
+  await P.ctx.close();
+});
+
 test('로그인 실패 안내 · 로그아웃 뒤 보호 화면은 로그인으로', async ({ browser, baseURL }) => {
   const P = await phone(browser, baseURL);
   const me = await signupApi(P.ctx.request, { name: 'QA바다' });
