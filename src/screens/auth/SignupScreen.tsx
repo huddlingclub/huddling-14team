@@ -8,7 +8,7 @@ import { checkProfile, emptyProfile, ProfileForm, type FieldErrors } from '@/com
 import { BottomCta, Button, Chip, iconProps, TextField, TopBar } from '@/components/ui';
 import { api } from '@/lib/client';
 import { shrinkImage } from '@/lib/image';
-import { limits, type ProfileInput, type Tag } from '@/lib/profile-input';
+import { limits, weakPassword, type ProfileInput, type Tag } from '@/lib/profile-input';
 
 type Step = 'method' | 'reading' | 'form';
 type CardResult = { displayName?: string; role?: string; region?: string };
@@ -40,6 +40,7 @@ export function SignupScreen({ next, options, ocr }: { next: string; options: Ta
     if (!v) return '비밀번호를 입력해 주세요.';
     if (v.length < limits.passwordMin) return `비밀번호는 ${limits.passwordMin}자 이상 입력해 주세요.`;
     if (v.length > limits.passwordMax) return `비밀번호는 ${limits.passwordMax}자까지 입력할 수 있어요.`;
+    if (weakPassword(v, username)) return '너무 쉬운 비밀번호예요. 다른 비밀번호를 입력해 주세요.';
     return undefined;
   }
 

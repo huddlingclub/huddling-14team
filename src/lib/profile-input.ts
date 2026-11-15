@@ -47,12 +47,30 @@ export function cleanText(value: unknown) {
     .replace(/\p{Cc}|[\u2028\u2029]/gu, " ") // 줄바꿈 · 탭 같은 제어 문자는 띄어쓰기로
     // 형식 문자는 지운다. 그림 글자를 잇는 두 글자(U+200C · U+200D)만 남긴다
     .replace(/\p{Cf}/gu, (c) => (c === "\u200c" || c === "\u200d" ? c : ""))
-    .replace(/[\u115f\u1160\u2800\u3164\uffa0]/g, "") // 한글 채움 문자 · 점자 빈칸
+    // 빈칸으로 보이는 글자: 한글 채움 문자 · 점자 빈칸 · 빈 상자 · 보이지 않는 음표
+    .replace(/[\u115f\u1160\u2800\u3164\uffa0\ufffc]|\u{1d159}/gu, "")
     .replace(/(\p{M}{3})\p{M}+/gu, "$1") // 결합 기호는 연달아 3개까지
     .replace(/\s+/g, " ")
     .trim();
-  // 잇는 글자만 남았으면 빈 값
-  return text.replace(/[\u200c\u200d\ufe00-\ufe0f]/g, "") ? text : "";
+  // 눈에 보이는 글자(문자 · 숫자 · 기호 · 그림 글자)가 하나도 없으면 빈 값 — 겹침 기호 · 잇는 글자 · 쓰임 없는 글자만 남은 경우
+  return /[\p{L}\p{N}\p{S}\p{P}]/u.test(text) ? text : "";
+}
+
+// 누구나 먼저 넣어 보는 값들. 아이디가 있는지는 등록 화면에서 알 수 있어서, 이런 값은 아이디만 알면 뚫린다
+const COMMON_PASSWORDS = new Set([
+  "12345678", "123456789", "1234567890", "87654321", "12341234", "11112222", "password", "password1", "password123",
+  "passw0rd", "qwer1234", "1234qwer", "qwerty123", "qwertyui", "qwertyuiop", "1q2w3e4r", "1q2w3e4r5t", "asdf1234",
+  "asdfasdf", "asdfghjk", "zxcvbnm1", "abcd1234", "abcdefgh", "a1234567", "iloveyou", "huddling", "huddling1",
+  "huddlingclub", "huddling123",
+]);
+
+/** 가입할 때 거절하는 쉬운 비밀번호: 흔한 값, 한 글자 반복, 아이디와 같거나 아이디 뒤에 숫자만 붙인 값 */
+export function weakPassword(password: string, username: string) {
+  const p = password.toLowerCase();
+  const u = username.trim().toLowerCase();
+  if (COMMON_PASSWORDS.has(p)) return true;
+  if (p.length > 0 && p.split("").every((c) => c === p[0])) return true;
+  return u.length > 0 && p.startsWith(u) && /^[0-9]*$/.test(p.slice(u.length));
 }
 
 export function readProfile(input: Record<string, unknown>, options: Tag[]): ProfileInput {

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { allowAttempt, fail, readJson, requesterAddress } from "@/lib/account-http";
 import { transaction } from "@/lib/db";
 import { hashPassword } from "@/lib/passwords";
-import { limits, readCredentials, readProfile, validUsername } from "@/lib/profile-input";
+import { limits, readCredentials, readProfile, validUsername, weakPassword } from "@/lib/profile-input";
 import { getTagOptions, saveProfile } from "@/lib/profiles";
 import { createSession, setSessionCookie } from "@/lib/session";
 
@@ -13,6 +13,9 @@ export async function POST(request: Request) {
   if (!validUsername(username)) return fail("아이디는 영문, 숫자, 밑줄 3~24자로 입력해 주세요.", 400);
   if (password.length < limits.passwordMin || password.length > limits.passwordMax) {
     return fail(`비밀번호는 ${limits.passwordMin}~${limits.passwordMax}자로 입력해 주세요.`, 400);
+  }
+  if (weakPassword(password, username)) {
+    return fail("너무 쉬운 비밀번호예요. 다른 비밀번호를 입력해 주세요.", 400);
   }
 
   try {
